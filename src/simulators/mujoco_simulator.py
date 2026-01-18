@@ -43,10 +43,10 @@ class MuJoCoSimulator:
     def _setup_camera(self):
 
         if self.viewer is not None:
-            self.viewer.cam.lookat[:] = [0, 0, 0.3]
-            self.viewer.cam.distance = 3.0
+            self.viewer.cam.lookat[:] = [0, 0, 0.5]
+            self.viewer.cam.distance = 8.0
             self.viewer.cam.azimuth = 90.0
-            self.viewer.cam.elevation = -20.0
+            self.viewer.cam.elevation = -10.0
     
     def update_viewer(self):
 

@@ -2,6 +2,7 @@ import numpy as np
 import time
 from controllers.pendulum_controller import PidPendulumController
 from simulators.mujoco_simulator import MuJoCoSimulator
+from utils.plots import _plot_angle_comparison, _plot_control_signal
 
 def run_simulation(model_path: str, kp_angle: float = 1.0, ki_angle: float = 0.0, 
                    kd_angle: float = 0.0, kp_pos: float = 0.0, ki_pos: float = 0.0,
