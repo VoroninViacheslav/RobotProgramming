@@ -1,12 +1,14 @@
 import numpy as np
 import time
 from controllers.pendulum_controller import PidPendulumController
+from controllers.lqr_controller import LqrPendulumController
 from simulators.mujoco_simulator import MuJoCoSimulator
 from utils.plots import _plot_angle_comparison, _plot_control_signal
 
-def run_simulation(model_path: str, kp_angle: float = 1.0, ki_angle: float = 0.0, 
+def run_simulation(model_path: str, controller_type: str = "pid",
+                   kp_angle: float = 1.0, ki_angle: float = 0.0, 
                    kd_angle: float = 0.0, kp_pos: float = 0.0, ki_pos: float = 0.0,
-                   kd_pos: float = 0.0, duration: float = 30.0, 
+                   kd_pos: float = 0.0, K: np.ndarray = None, duration: float = 30.0, 
                    headless: bool = False, initial_angle_offset: float = 0.2,
                    realtime: bool = True, slowdown: float = 1.0):
 
@@ -14,18 +16,28 @@ def run_simulation(model_path: str, kp_angle: float = 1.0, ki_angle: float = 0.0
     
     target_angle = 0.0
     target_position = 0.0
-    initial_angle = target_angle + initial_angle_offset
+    
+    initial_angle = initial_angle_offset
     simulator.reset(cart_pos=0.0, pole_angle=initial_angle)
     
     if not headless:
         simulator.render(headless=False)
         time.sleep(0.5)
     
-    controller = PidPendulumController(
-        kp_angle=kp_angle, ki_angle=ki_angle, kd_angle=kd_angle,
-        kp_pos=kp_pos, ki_pos=ki_pos, kd_pos=kd_pos,
-        target_angle=target_angle, target_pos=target_position
-    )
+    if controller_type.lower() == "lqr":
+        controller = LqrPendulumController(
+            K=K, target_angle=target_angle, target_pos=target_position
+        )
+        print(f"Controller: LQR with K = {controller.K}")
+        print(f"LQR target angle = {np.degrees(target_angle):.1f}° (0 radians, top position)")
+    else:
+        controller = PidPendulumController(
+            kp_angle=kp_angle, ki_angle=ki_angle, kd_angle=kd_angle,
+            kp_pos=kp_pos, ki_pos=ki_pos, kd_pos=kd_pos,
+            target_angle=target_angle, target_pos=target_position
+        )
+        print(f"PID parameters - Angle: Kp={kp_angle}, Ki={ki_angle}, Kd={kd_angle}")
+        print(f"PID parameters - Position: Kp={kp_pos}, Ki={ki_pos}, Kd={kd_pos}")
     
     dt = simulator.model.opt.timestep
     
@@ -38,8 +50,6 @@ def run_simulation(model_path: str, kp_angle: float = 1.0, ki_angle: float = 0.0
     print(f"Starting simulation for {duration} seconds...")
     print(f"Target: pole angle = {np.degrees(target_angle):.1f}°, cart position = {target_position:.3f} m")
     print(f"Initial: pole angle = {np.degrees(initial_angle):.1f}° (offset: {np.degrees(initial_angle_offset):.1f}°)")
-    print(f"PID parameters - Angle: Kp={kp_angle}, Ki={ki_angle}, Kd={kd_angle}")
-    print(f"PID parameters - Position: Kp={kp_pos}, Ki={ki_pos}, Kd={kd_pos}")
     if not headless and realtime:
         print(f"Visualization: realtime (slowdown: {slowdown}x)")
     
@@ -56,11 +66,9 @@ def run_simulation(model_path: str, kp_angle: float = 1.0, ki_angle: float = 0.0
         prev_error = angle_error
 
         control = controller.compute(
-            pole_angle = state['pole_angle'],
-            pole_velocity = state['pole_vel'],
-            dt = dt,
-            cart_pos = state['cart_pos'],
-            cart_velocity = state['cart_vel'],
+            pole_angle=state['pole_angle'],
+            cart_pos=state['cart_pos'],
+            dt=dt
         )
 
         controls.append(control)

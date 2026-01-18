@@ -21,7 +21,9 @@ Examples:
   python src/main.py
   
   # Custom PID parameters:
-  python src/main.py --kp-angle 200 --kd-angle 25 --ki-angle 2
+  python src/main.py --kp-angle 200 --kd-angle 20 --ki-angle 0 --kp-pos 3 --kd-pos 1.5
+  LQR
+  python src/main.py --controller lqr --duration 5 --initial-offset 0.1
     """
     )
     
@@ -31,13 +33,13 @@ Examples:
                        help="Proportional gain for angle (default: 200.0)")
     parser.add_argument("--ki-angle", type=float, default=0.0,
                        help="Integral gain for angle (default: 2.0)")
-    parser.add_argument("--kd-angle", type=float, default=25.0,
+    parser.add_argument("--kd-angle", type=float, default=20.0,
                        help="Derivative gain for angle (default: 25.0)")
-    parser.add_argument("--kp-pos", type=float, default=15.0,
+    parser.add_argument("--kp-pos", type=float, default=3.0,
                        help="Proportional gain for position (default: 15.0)")
     parser.add_argument("--ki-pos", type=float, default=0.0,
                        help="Integral gain for position (default: 0.0)")
-    parser.add_argument("--kd-pos", type=float, default=2.0,
+    parser.add_argument("--kd-pos", type=float, default=1.5,
                        help="Derivative gain for position (default: 2.0)")
     parser.add_argument("--duration", type=float, default=20.0,
                        help="Simulation duration in seconds (default: 30.0)")
@@ -49,6 +51,8 @@ Examples:
                        help="Disable realtime visualization (run as fast as possible)")
     parser.add_argument("--slowdown", type=float, default=1.0,
                        help="Slowdown factor for visualization (1.0 = realtime, 2.0 = 2x slower) (default: 1.0)")
+    parser.add_argument("--controller", type=str, default="pid", choices=["pid", "lqr"],
+                       help="Controller type: 'pid' or 'lqr' (default: pid)")
     
     args = parser.parse_args()
     
@@ -56,16 +60,23 @@ Examples:
     if args.initial_offset_deg is not None:
         initial_offset = np.radians(args.initial_offset_deg)
     
+    K = None
+    if args.controller.lower() == "lqr":
+        K = np.array([-31.6227766016845,	-61.2570308511974,	-577.941806517827,	-326.292325681899])
+
+    
     model_path = os.path.join(os.path.dirname(__file__), "models", "cartpole.xml")
     
     run_simulation(
         model_path=model_path,
+        controller_type=args.controller,
         kp_angle=args.kp_angle,
         ki_angle=args.ki_angle,
         kd_angle=args.kd_angle,
         kp_pos=args.kp_pos,
         ki_pos=args.ki_pos,
         kd_pos=args.kd_pos,
+        K=K,
         duration=args.duration,
         headless=args.headless,
         initial_angle_offset=initial_offset,

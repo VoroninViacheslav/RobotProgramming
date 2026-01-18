@@ -20,8 +20,7 @@ class PidPendulumController:
         self.pid_controller_pole = PIDController(kp_angle, ki_angle, kd_angle, output_limit, integral_limit)
         self.pid_controller_cart = PIDController(kp_pos, ki_pos, kd_pos, output_limit, integral_limit)
 
-    def compute(self, pole_angle: float, pole_velocity: float, dt: float,
-                cart_pos: float, cart_velocity: float) -> float:
+    def compute(self, pole_angle: float, dt: float, cart_pos: float) -> float:
 
         error_angle = pole_angle - self.target_angle
         error_angle = np.arctan2(np.sin(error_angle), np.cos(error_angle))

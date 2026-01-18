@@ -78,6 +78,9 @@ python src/main.py --headless
 
 Настройка PID-параметров:
 ```bash
-# Улучшенные параметры для стабильности
 python src/main.py --kp-angle 100 --kd-angle 20 --ki-angle 1 --kp-pos 5 --kd-pos 1
+```
+Запуск системы с LQR-регулятором:
+```bash
+python src/main.py --controller lqr --duration 5 --initial-offset 0.1
 ```
